@@ -1,0 +1,333 @@
+function doGet() {
+  return HtmlService.createHtmlOutput(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Roblox Intelligence | Analizador Profesional</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+      <style>
+        :root {
+          --bg-base: #090d16;
+          --bg-card: #111827;
+          --border-color: #1f293d;
+          --accent: #00ff88;
+          --accent-hover: #00cc6a;
+          --text-main: #f3f4f6;
+          --text-muted: #9ca3af;
+          --font-sans: 'Inter', sans-serif;
+          --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          background-color: var(--bg-base);
+          color: var(--text-main);
+          font-family: var(--font-sans);
+          padding: 30px 20px;
+          min-height: 100vh;
+        }
+
+        .wrapper {
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+
+        header {
+          text-align: center;
+          margin-bottom: 35px;
+        }
+
+        header h1 {
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 8px;
+          color: #ffffff;
+        }
+
+        header p {
+          color: var(--text-muted);
+          font-size: 0.95rem;
+        }
+
+        .card {
+          background-color: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          padding: 24px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          margin-bottom: 30px;
+        }
+
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 8px;
+        }
+
+        input[type="text"], select, textarea {
+          width: 100%;
+          background-color: #0d131f;
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 12px 16px;
+          color: var(--text-main);
+          font-size: 0.95rem;
+          outline: none;
+          font-family: var(--font-sans);
+          transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+          border-color: var(--accent);
+        }
+
+        .btn-main {
+          background-color: var(--accent);
+          color: #050b14;
+          font-weight: 700;
+          font-size: 1rem;
+          border: none;
+          border-radius: 8px;
+          padding: 14px 20px;
+          width: 100%;
+          cursor: pointer;
+          transition: background-color 0.2s, transform 0.1s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .btn-main:hover {
+          background-color: var(--accent-hover);
+        }
+
+        .btn-main:active {
+          transform: scale(0.99);
+        }
+
+        .grid-games {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 16px;
+          margin-bottom: 30px;
+        }
+
+        .game-box {
+          background-color: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 16px;
+        }
+
+        .game-name {
+          font-weight: 600;
+          font-size: 0.95rem;
+          margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .game-author {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-bottom: 12px;
+        }
+
+        .game-metrics {
+          display: flex;
+          justify-content: space-between;
+          background: #0d131f;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-size: 0.85rem;
+          font-family: var(--font-mono);
+        }
+
+        .metric-val {
+          color: var(--accent);
+          font-weight: bold;
+        }
+
+        .report-box {
+          background-color: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          padding: 24px;
+          display: none;
+        }
+
+        .report-box.active {
+          display: block;
+        }
+
+        .report-title {
+          font-size: 1.15rem;
+          font-weight: 700;
+          margin-bottom: 16px;
+          border-bottom: 1px solid var(--border-color);
+          padding-bottom: 10px;
+        }
+
+        .report-content {
+          white-space: pre-line;
+          color: #d1d5db;
+          font-size: 0.92rem;
+          line-height: 1.7;
+        }
+
+        .spinner {
+          width: 18px;
+          height: 18px;
+          border: 3px solid rgba(0,0,0,0.2);
+          border-radius: 50%;
+          border-top-color: #050b14;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <header>
+          <h1>Roblox Intelligence</h1>
+          <p>Plataforma automatizada de análisis de nichos</p>
+        </header>
+
+        <div class="card">
+          <div class="form-group">
+            <label for="keywordInput">Palabra clave de búsqueda</label>
+            <input type="text" id="keywordInput" value="survival" placeholder="Ej: simulator, tycoon..." />
+          </div>
+
+          <div class="form-group">
+            <label for="limitSelect">Cantidad de registros</label>
+            <select id="limitSelect">
+              <option value="10">10 juegos</option>
+              <option value="20" selected>20 juegos</option>
+              <option value="30">30 juegos</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="objectiveInput">Objetivo estratégico</label>
+            <textarea id="objectiveInput" rows="2">Encontrar oportunidades de nicho para desarrollar un juego multijugador.</textarea>
+          </div>
+
+          <button id="actionBtn" class="btn-main">
+            <span>Ejecutar Análisis Completo</span>
+          </button>
+        </div>
+
+        <div id="gamesSection" style="display: none;">
+          <h3 style="margin-bottom: 12px; font-size: 1.1rem;">Juegos en tendencia detectados:</h3>
+          <div id="gamesGrid" class="grid-games"></div>
+        </div>
+
+        <div id="reportContainer" class="report-box">
+          <div class="report-title">Informe de Inteligencia de Mercado</div>
+          <div id="reportContent" class="report-content"></div>
+        </div>
+      </div>
+
+      <script>
+        const actionBtn = document.getElementById('actionBtn');
+        const keywordInput = document.getElementById('keywordInput');
+        const limitSelect = document.getElementById('limitSelect');
+        const objectiveInput = document.getElementById('objectiveInput');
+        
+        const gamesSection = document.getElementById('gamesSection');
+        const gamesGrid = document.getElementById('gamesGrid');
+        const reportContainer = document.getElementById('reportContainer');
+        const reportContent = document.getElementById('reportContent');
+
+        actionBtn.addEventListener('click', async () => {
+          const keyword = keywordInput.value.trim() || 'survival';
+          const limit = limitSelect.value;
+          const objective = objectiveInput.value.trim();
+
+          actionBtn.disabled = true;
+          actionBtn.innerHTML = \`<div class="spinner"></div> Conectando...\`;
+          reportContainer.classList.remove('active');
+          gamesSection.style.display = 'none';
+
+          try {
+            const resGames = await fetch(\`/api/games?keyword=\${encodeURIComponent(keyword)}&limit=\${limit}\`);
+            const dataGames = await resGames.json();
+
+            if (!resGames.ok) throw new Error(dataGames.error || 'Error al consultar Roblox');
+
+            renderGames(dataGames.games);
+            gamesSection.style.display = 'block';
+
+            actionBtn.innerHTML = \`<div class="spinner"></div> Analizando con Gemini...\`;
+
+            const resAnalyze = await fetch('/api/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ games: dataGames.games, objective })
+            });
+
+            const dataAnalyze = await resAnalyze.json();
+            if (!resAnalyze.ok) throw new Error(dataAnalyze.error || 'Error al generar análisis');
+
+            reportContent.textContent = dataAnalyze.analysis;
+            reportContainer.classList.add('active');
+
+          } catch (err) {
+            alert('Aviso: ' + err.message);
+          } finally {
+            actionBtn.disabled = false;
+            actionBtn.innerHTML = \`<span>Ejecutar Análisis Completo</span>\`;
+          }
+        });
+
+        function renderGames(games) {
+          gamesGrid.innerHTML = '';
+          games.forEach(g => {
+            const box = document.createElement('div');
+            box.className = 'game-box';
+            box.innerHTML = \`
+              <div class="game-name" title="\${escapeHtml(g.name)}">\${escapeHtml(g.name)}</div>
+              <div class="game-author">Creador: \${escapeHtml(g.creator)}</div>
+              <div class="game-metrics">
+                <span>Jugando: <span class="metric-val">\${g.playing.toLocaleString()}</span></span>
+                <span>Aprobación: <span class="metric-val">\${g.approval !== null ? g.approval + '%' : 'N/A'}</span></span>
+              </div>
+            \`;
+            gamesGrid.appendChild(box);
+          });
+        }
+
+        function escapeHtml(str) {
+          return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+          }[m]));
+        }
+      </script>
+    </body>
+    </html>
+  `);
+}
