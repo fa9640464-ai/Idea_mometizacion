@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Roblox</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: white; padding: 20px; }
+        input, textarea, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; box-sizing: border-box; }
+        input, textarea { background: #1e293b; color: white; border: 1px solid #334155; }
+        button { background: #22c55e; color: white; font-weight: bold; border: none; cursor: pointer; }
+        #resultado { margin-top: 20px; background: #1e293b; padding: 15px; border-radius: 6px; white-space: pre-line; }
+    </style>
+</head>
+<body>
+
+    <h2>🚀 Analizador de Nichos de Roblox</h2>
+    
+    <label>Tu Clave API de Gemini (Gratis):</label>
+    <input type="password" id="apiKey" placeholder="Pegá acá tu clave secreta de Google AI Studio">
+
+    <label>Juegos en Tendencia / Datos de Roblox:</label>
+    <textarea id="datosRoblox" rows="4" placeholder="Ej: Top 1: Juego de Supervivencia (40k CCU), Top 2: Simulador (15k CCU)..."></textarea>
+
+    <button onclick="preguntarIA()">Analizar Nicho con IA</button>
+
+    <h3>Resultado del Análisis:</h3>
+    <div id="resultado">Esperando datos...</div>
+
+    <script>
+        async function preguntarIA() {
+            const key = document.getElementById('apiKey').value;
+            const datos = document.getElementById('datosRoblox').value;
+            const resDiv = document.getElementById('resultado');
+
+            if (!key || !datos) {
+                alert("Por favor ingresá la API Key y los datos a analizar.");
+                return;
+            }
+
+            resDiv.innerText = "Pensando análisis de nicho...";
+
+            // Llamada DIRECTA a la API de Google Gemini (sin servidores ni intermediarios)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+
+            const promptText = `Actúa como un experto en Roblox. Analizá estas tendencias e identificá el mejor nicho y modelo de monetización:\n${datos}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const textoIA = data.candidates[0].content.parts[0].text;
+                resDiv.innerText = textoIA;
+            } catch (error) {
+                resDiv.innerText = "Error al conectar con la API. Revisá si tu clave es correcta.";
+            }
+        }
+    </script>
+</body>
+</html>
