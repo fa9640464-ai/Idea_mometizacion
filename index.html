@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Trends AI Analytics - Dashboard Interactivo</title>
+    <style>
+        :root {
+            --bg-dark: #0a0c10;
+            --bg-card: #161a23;
+            --accent-blue: #00ffd1;
+            --accent-purple: #8a2be2;
+            --text-main: #f5f6f9;
+            --text-muted: #8b949e;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background: rgba(22, 26, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(0, 255, 209, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: var(--accent-blue);
+            border: 1px solid rgba(0, 255, 209, 0.2);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Buscador y Controles */
+        .controls-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .filter-btn {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-blue);
+            color: var(--bg-dark);
+            font-weight: 600;
+            border-color: var(--accent-blue);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        /* Top Games List */
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .game-item:hover {
+            transform: translateX(5px);
+            border-color: rgba(0, 255, 209, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .game-info h3 {
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+
+        .game-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .tag {
+            background: rgba(138, 43, 226, 0.15);
+            color: #c18fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .player-count {
+            text-align: right;
+            font-weight: 600;
+            color: var(--accent-blue);
+            font-size: 0.95rem;
+        }
+
+        /* AI Insights & Generator */
+        .insights-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .niche-item {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--accent-purple);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .niche-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .ai-generator-box {
+            background: linear-gradient(135deg, #161a23, #1e1432);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .gen-btn {
+            background: linear-gradient(45deg, var(--accent-purple), #b14eff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+        }
+
+        .gen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
+        }
+
+        .idea-output {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            font-size: 0.95rem;
+            text-align: left;
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">ROBLOX.AI</div>
+        <div class="ai-status">
+            <div class="pulse-dot"></div>
+            <span>IA Analizando Tendencias en Vivo</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>Análisis de Mercado & Nichos Roblox</h1>
+            <p>Monitoreo inteligente de los juegos más jugados e ideas de nichos emergentes generadas por IA.</p>
+        </div>
+
+        <!-- Barra de Controles Interactiva -->
+        <div class="controls-bar">
+            <input type="text" id="search-input" class="search-input" placeholder="Buscar juego por nombre...">
+            <button class="filter-btn active" onclick="filterGenre('Todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filterGenre('Anime', this)">Anime</button>
+            <button class="filter-btn" onclick="filterGenre('RPG', this)">RPG</button>
+            <button class="filter-btn" onclick="filterGenre('Simulador', this)">Simuladores</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Juegos -->
+            <section class="card">
+                <div class="card-title">
+                    <h2>Juegos Filtrados</h2>
+                    <span id="games-count" style="font-size: 0.85rem; color: var(--accent-blue);">5 juegos encontrados</span>
+                </div>
+                <div class="games-list" id="games-container">
+                    <!-- Dinámico -->
+                </div>
+            </section>
+
+            <!-- Panel IA -->
+            <div class="insights-panel">
+                <section class="card">
