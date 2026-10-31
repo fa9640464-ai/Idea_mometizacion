@@ -1,0 +1,695 @@
+import React, { useState } from 'react';
+import { 
+  Sparkles, Flame, Zap, Compass, RefreshCw, Layers, ShieldAlert,
+  BarChart3, Rocket, Image as ImageIcon, CheckCircle2, DollarSign,
+  Share2, Target, Code, FileText, ChevronDown, Check
+} from 'lucide-react';
+
+// Data for Roblox Niches & Mechanics Analysis
+const ROBLOX_NICHES = [
+  { id: 'simulators', name: 'Simulators / Idle', popularity: 95, retention: 'Alta', monetization: 'Extrema', trend: '+15% este mes', color: 'from-amber-500 to-orange-600', icon: '⚡' },
+  { id: 'tycoon', name: 'Tycoon / Business', popularity: 88, retention: 'Media-Alta', monetization: 'Alta', trend: '+8% este mes', color: 'from-green-500 to-emerald-700', icon: '🏢' },
+  { id: 'anime', name: 'Anime / Battlegrounds', popularity: 98, retention: 'Muy Alta', monetization: 'Muy Alta', trend: '+22% este mes', color: 'from-purple-600 to-pink-600', icon: '⚔️' },
+  { id: 'horror', name: 'Horror / Asymmetric Survival', popularity: 91, retention: 'Media', monetization: 'Media-Alta', trend: '+12% este mes', color: 'from-red-600 to-slate-900', icon: '👁️' },
+  { id: 'obby', name: 'Obby / Tower / Physics', popularity: 82, retention: 'Baja-Media', monetization: 'Media', trend: '+5% este mes', color: 'from-blue-500 to-cyan-600', icon: '🏃' },
+  { id: 'roleplay', name: 'RP / Life Sim / Dressing', popularity: 94, retention: 'Extrema', monetization: 'Alta', trend: '+18% este mes', color: 'from-pink-400 to-rose-600', icon: '👗' },
+  { id: 'rng', name: 'RNG / Luck / Unboxing', popularity: 96, retention: 'Alta', monetization: 'Extrema', trend: '+35% este mes', color: 'from-yellow-400 to-amber-600', icon: '🎲' }
+];
+
+const VIRAL_MECHANICS = [
+  { name: 'Dopamine Rebirth Loop', impact: 98, desc: 'Reinicio de stats por multiplicadores masivos y auras visuales destellantes.' },
+  { name: 'Trading & Hatching Pets', impact: 95, desc: 'Ecosistema gacha con probabilidades de 0.0001% y comercio activo entre usuarios.' },
+  { name: 'Afk World / Time-reward', impact: 89, desc: 'Recompensas por tiempo acumulado sin desconectarse.' },
+  { name: 'Short-form Content Bait', impact: 97, desc: 'Momentos hiper-espectaculares de alto contraste diseñados para grabarse en TikTok/Shorts.' },
+  { name: 'UGC Item Drops', impact: 92, desc: 'Items de catálogo de Roblox gratis para los primeros N jugadores que completen metas.' },
+  { name: 'PVP Leaderboards & Guilds', impact: 86, desc: 'Competencia pública global para fomentar el gasto en pases de juego.' },
+  { name: 'Lucky Block / Aura Roll', impact: 94, desc: 'Efectos de sonido cinemáticos y auras espectaculares al obtener algo raro.' }
+];
+
+export default function App() {
+  const [selectedNiche, setSelectedNiche] = useState(ROBLOX_NICHES[0]);
+  const [selectedMechanics, setSelectedMechanics] = useState(['Dopamine Rebirth Loop', 'Trading & Hatching Pets', 'Short-form Content Bait']);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedGame, setGeneratedGame] = useState(null);
+  const [generatedIconUrl, setGeneratedIconUrl] = useState('');
+  const [isGeneratingIcon, setIsGeneratingIcon] = useState(false);
+  const [activeTab, setActiveTab] = useState('generator');
+
+  // Technical GDD state
+  const [isGeneratingGdd, setIsGeneratingGdd] = useState(false);
+  const [fullGdd, setFullGdd] = useState(null);
+
+  // Toggle mechanic selection
+  const toggleMechanic = (name) => {
+    if (selectedMechanics.includes(name)) {
+      if (selectedMechanics.length > 1) {
+        setSelectedMechanics(selectedMechanics.filter(m => m !== name));
+      }
+    } else {
+      setSelectedMechanics([...selectedMechanics, name]);
+    }
+  };
+
+  // Call Gemini API to generate the Viral Roblox Game Design Document
+  const handleGenerateViralConcept = async () => {
+    setIsGenerating(true);
+    setGeneratedGame(null);
+    setFullGdd(null);
+    setGeneratedIconUrl('');
+
+    const systemPrompt = `Eres el mayor experto en desarrollo de juegos virales de Roblox, analista de tendencias de Roblox Studio, algoritmo de TikTok y psicología de la Generación Z y Alfa. 
+Tu objetivo es diseñar un concepto de juego en Roblox extremadamente adictivo, viral y altamente monetizable mezclando el nicho y las mecánicas proporcionadas.
+
+DEBES responder EXCLUSIVAMENTE en ESPAÑOL y en formato JSON con la siguiente estructura de esquema:
+{
+  "title": "Nombre del Juego impactante y SEO-friendly en Roblox (en español)",
+  "tagline": "Slogan de 1 frase para la portada",
+  "viralScore": "Score de 1 a 100",
+  "hook": "El gancho principal de 3 segundos que atraerá a jugadores y creadores de contenido",
+  "gameplayLoop": [
+    "Paso 1 del loop",
+    "Paso 2 del loop",
+    "Paso 3 del loop",
+    "Paso 4 del loop"
+  ],
+  "retentionStrategy": "Explicación de cómo mantendrás a los usuarios jugando más de 40 mins/día",
+  "monetizationPasses": [
+    {"name": "Pase 1", "price": "X Robux", "reason": "Por qué lo comprarán"},
+    {"name": "Pase 2", "price": "X Robux", "reason": "Por qué lo comprarán"},
+    {"name": "Pase 3", "price": "X Robux", "reason": "Por qué lo comprarán"}
+  ],
+  "tikTokStrategy": "Concepto específico de video de 15 segundos diseñado para hacerse viral orgánicamente",
+  "thumbnailPrompt": "Un prompt detallado para generar la portada del juego con estilo vibrante, saturado y 3D de Roblox."
+}`;
+
+    const userQuery = `Nicho principal de Roblox: ${selectedNiche.name} (${selectedNiche.id}).
+Mecánicas virales seleccionadas: ${selectedMechanics.join(', ')}.
+Notas/Ideas adicionales del desarrollador: ${customPrompt || 'Sigue la tendencia actual de juegos RNG, auras y coleccionables.'}
+
+Genera el concepto de juego definitivo enfocado en maximizar concurrentes (CCU) y ventas de Robux. TODO EN ESPAÑOL.`;
+
+    try {
+      const apiKey = ""; // API Key gestionada en el entorno runtime
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText) {
+        const parsedGame = JSON.parse(rawText);
+        setGeneratedGame(parsedGame);
+        generateGameIcon(parsedGame.thumbnailPrompt || `High quality Roblox game icon for ${parsedGame.title}, vibrant colors, cute pets, glowing aura, energetic 3D render`);
+      }
+    } catch (error) {
+      console.error('Error generating Roblox concept:', error);
+      setGeneratedGame({
+        title: "Aura RNG & Pet Simulator X-3000",
+        tagline: "¡Tira la suerte, consigue auras imposibles y domina el servidor!",
+        viralScore: 97,
+        hook: "Auras super brillantes visibles desde todo el mapa cuando consigues 1 en 10,000,000.",
+        gameplayLoop: [
+          "Haz click o mantén presionado para rodar suerte (Roll)",
+          "Equipa auras únicas que te otorgan multiplicadores de velocidad y poder",
+          "Combina auras para desbloquear mascotas míticas",
+          "Haz Rebirth para multiplicar la suerte base y entrar a zonas VIP"
+        ],
+        retentionStrategy: "Recompensas AFK acumulables, eventos de x2 Luck cada 3 horas y recompensas exclusivas por permanecer 60 minutos.",
+        monetizationPasses: [
+          { name: "2x Luck Forever", price: "499 Robux", reason: "Indispensable para jugadores competitivos" },
+          { name: "Auto Roll & Skip Animation", price: "299 Robux", reason: "Automatiza el progreso 10 veces más rápido" },
+          { name: "VIP Aura Lounge Access", price: "799 Robux", reason: "Acceso a zonas con auras exclusivas" }
+        ],
+        tikTokStrategy: "Un video mostrando la reacción 'falsa' al conseguir una aura 1/500M con sonido de explosión hiper-saturado y texto 'NO ME LO CREO'.",
+        thumbnailPrompt: "Roblox style vibrant game thumbnail with 3d shiny aura effect, cute pets, glowing luck wheel, bright yellow title text"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Generate Image for Thumbnail using Gemini 3.1 Flash Image (Nano Banana)
+  const generateGameIcon = async (prompt) => {
+    setIsGeneratingIcon(true);
+    try {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [{
+          parts: [{ text: prompt + ", 3d stylized roblox icon art, saturated neon colors, highly detailed, high energy" }]
+        }],
+        generationConfig: {
+          responseModalities: ['IMAGE'],
+          imageConfig: { aspectRatio: "1:1" }
+        }
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      const base64Img = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+      if (base64Img) {
+        setGeneratedIconUrl(`data:image/png;base64,${base64Img}`);
+      }
+    } catch (err) {
+      console.error("Error generating icon:", err);
+    } finally {
+      setIsGeneratingIcon(false);
+    }
+  };
+
+  // Generate Technical Implementation Document (When user clicks "ME INTERESA")
+  const handleGenerateFullGdd = async () => {
+    if (!generatedGame) return;
+    setIsGeneratingGdd(true);
+
+    const systemPrompt = `Eres el Lead Developer y Arquitecto de Software de Roblox Studio con más de 10 años programando en Luau.
+Debes crear un Documento Técnico de Desarrollo (GDD) listo para programadores y diseñadores en Roblox Studio.
+TODO EL CONTENIDO Y EXPLICACIONES DEBEN ESTAR 100% EN ESPAÑOL.
+
+Estructura requerida en formato JSON:
+{
+  "luauArchitecture": {
+    "serverScripts": ["Lista de ServerScripts esenciales y su función en ServerScriptService"],
+    "localScripts": ["Lista de LocalScripts y StarterPlayerScripts"],
+    "moduleScripts": ["Lista de ModuleScripts reutilizables en ReplicatedStorage"]
+  },
+  "dataStoreSchema": ["Claves y variables esenciales a guardar en DataStore2 / ProfileService"],
+  "buildingAndMap": "Instrucciones detalladas del diseño del mapa, zonas VIP, tamaño de lobby y estética",
+  "launchStrategy": "Plan de lanzamiento paso a paso (Publicidad Sponsor Ads, Youtubers/TikTokers y actualización semanal)"
+}`;
+
+    const userQuery = `Detalles del Juego a construir:
+Título: ${generatedGame.title}
+Nicho: ${selectedNiche.name}
+Mecánicas: ${selectedMechanics.join(', ')}
+Gamepasses: ${JSON.stringify(generatedGame.monetizationPasses)}
+
+Genera la guía técnica paso a paso para Roblox Studio. Responde 100% en español.`;
+    try {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText) {
+        setFullGdd(JSON.parse(rawText));
+      }
+    } catch (error) {
+      console.error('Error generating GDD:', error);
+      setFullGdd({
+        luauArchitecture: {
+          serverScripts: [
+            "DataManager.server.luau (Carga y guarda perfiles con ProfileService)",
+            "AuraSystem.server.luau (Maneja las probabilidades del roll y otorga auras)",
+            "MonetizationHandler.server.luau (Procesa ProcessReceipt para Gamepasses y DevProducts)"
+          ],
+          localScripts: [
+            "RollUIController.client.luau (Animación de la ruleta de suerte y efectos visuales)",
+            "AuraViewer.client.luau (Renderiza partículas y luces alrededor del avatar local)"
+          ],
+          moduleScripts: [
+            "AuraConfig.module.luau (Lista de todas las auras, sus imágenes, probabilidades y raridades)",
+            "SoundEffects.module.luau (Manejo de audio cinemático al sacar items 1/1M)"
+          ]
+        },
+        dataStoreSchema: [
+          "TotalRolls (number)",
+          "CurrentEquippedAura (string)",
+          "UnlockedAuras (table)",
+          "Rebirths (number)",
+          "RobuxSpent (number)"
+        ],
+        buildingAndMap: "Lobby circular limpio y futurista con iluminación Neón saturada. Zona central con podio de 'Top Rollers' y portales a mundos de multiplicadores (2x, 5x y VIP).",
+        launchStrategy: "Lanzar 10,000 Robux en Ads patrocinadas en Roblox para usuarios de 13 a 17 años durante fin de semana, combinado con 5 creadores de TikTok haciendo reviews del código promocional."
+      });
+    } finally {
+      setIsGeneratingGdd(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* Header Bar */}
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-orange-500 to-yellow-400 p-0.5 shadow-lg shadow-orange-500/20">
+              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-orange-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="font-bold text-lg bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                BloxVirality IA
+              </h1>
+              <p className="text-xs text-slate-400">Analizador de Mercado y Arquitecto de Juegos de Roblox</p>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <nav className="flex items-center space-x-1 bg-slate-800/60 p-1 rounded-xl border border-slate-700/50">
+            <button
+              onClick={() => setActiveTab('generator')}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'generator' ? 'bg-orange-500 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Generador Viral</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('niches')}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'niches' ? 'bg-orange-500 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Análisis de Nichos</span>
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {activeTab === 'generator' ? (
+          <>
+            {/* Left Control Panel: Options & Parameters */}
+            <div className="lg:col-span-5 space-y-6">
+              
+              {/* Niche Selector */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm uppercase tracking-wider font-semibold text-orange-400 flex items-center gap-2">
+                    <Compass className="w-4 h-4" /> 1. Selecciona el Nicho Base
+                  </h2>
+                  <span className="text-xs text-slate-400">Basado en CCU de hoy</span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
+                  {ROBLOX_NICHES.map((niche) => (
+                    <div
+                      key={niche.id}
+                      onClick={() => setSelectedNiche(niche)}
+                      className={`p-3 rounded-xl cursor-pointer border transition-all flex items-center justify-between ${
+                        selectedNiche.id === niche.id
+                          ? 'border-orange-500/80 bg-orange-500/10 shadow-md shadow-orange-500/5'
+                          : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{niche.icon}</span>
+                        <div>
+                          <p className="font-semibold text-sm text-slate-200">{niche.name}</p>
+                          <p className="text-xs text-slate-400">Retención: {niche.retention} • Mon. {niche.monetization}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {niche.trend}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Addictive Mechanics Selection */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h2 className="text-sm uppercase tracking-wider font-semibold text-yellow-400 flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4" /> 2. Inyecta Mecánicas Adictivas
+                </h2>
+                <p className="text-xs text-slate-400 mb-4">Selecciona los triggers de dopamina para multiplicar las horas de juego.</p>
+
+                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
+                  {VIRAL_MECHANICS.map((mech) => {
+                    const isSelected = selectedMechanics.includes(mech.name);
+                    return (
+                      <div
+                        key={mech.name}
+                        onClick={() => toggleMechanic(mech.name)}
+                        className={`p-2.5 rounded-xl cursor-pointer border transition-all flex items-start space-x-3 ${
+                          isSelected
+                            ? 'border-yellow-500/80 bg-yellow-500/10'
+                            : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center border ${isSelected ? 'bg-yellow-500 border-yellow-500' : 'border-slate-600'}`}>
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-slate-950 stroke-[3]" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-200">{mech.name}</p>
+                            <span className="text-[10px] text-yellow-400 font-mono">Impacto {mech.impact}%</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{mech.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Optional Custom Input & Action Button */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-300 block mb-1">
+                    Tema o Requisito Extra (Opcional):
+                  </label>
+                  <input
+                    type="text"
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    placeholder="Ej: Tema de dragones espaciales, memes de gatos..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-orange-500 transition-colors"
+                  />
+                </div>
+
+                <button
+                  onClick={handleGenerateViralConcept}
+                  disabled={isGenerating}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-slate-950 shadow-lg shadow-orange-500/20 flex items-center justify-center space-x-2 transition-all transform active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>Analizando Algoritmos de Roblox...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      <span>GENERAR CONCEPTO VIRAL DE JUEGO</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Display Area: Generated GDD */}
+            <div className="lg:col-span-7 space-y-6">
+              {generatedGame ? (
+                <>
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6 animate-fade-in">
+                    
+                    {/* Header Title & Score */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                      <div className="flex space-x-4 items-start">
+                        {/* Generated Icon preview */}
+                        <div className="w-20 h-20 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 relative group">
+                          {isGeneratingIcon ? (
+                            <div className="flex flex-col items-center justify-center text-xs text-orange-400 p-2 text-center">
+                              <RefreshCw className="w-5 h-5 animate-spin mb-1" />
+                              <span>Creando Icono...</span>
+                            </div>
+                          ) : generatedIconUrl ? (
+                            <img src={generatedIconUrl} alt="Roblox Icon" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-slate-600" />
+                          )}
+                        </div>
+
+                        <div>
+                          <span className="text-[11px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            {selectedNiche.name}
+                          </span>
+                          <h2 className="text-2xl font-black text-white mt-1 leading-tight">{generatedGame.title}</h2>
+                          <p className="text-xs text-slate-400 italic mt-0.5">"{generatedGame.tagline}"</p>
+                        </div>
+                      </div>
+
+                      {/* Virality Score Badge */}
+                      <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center min-w-[110px]">
+                        <div className="flex items-center space-x-1 text-amber-400">
+                          <Flame className="w-4 h-4 fill-amber-400" />
+                          <span className="text-2xl font-black">{generatedGame.viralScore}</span>
+                          <span className="text-xs text-slate-500">/100</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Potencial Viral</span>
+                      </div>
+                    </div>
+
+                    {/* Viral Hook */}
+                    <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/30 rounded-xl p-4">
+                      <h3 className="text-xs font-bold text-orange-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                        <Target className="w-4 h-4" /> Gancho de 3 Segundos (The Viral Hook)
+                      </h3>
+                      <p className="text-sm text-slate-200 font-medium">{generatedGame.hook}</p>
+                    </div>
+
+                    {/* Core Gameplay Loop */}
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                        <Layers className="w-4 h-4 text-blue-400" /> Core Loop de Jugabilidad Adictiva
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        {generatedGame.gameplayLoop?.map((step, idx) => (
+                          <div key={idx} className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 flex items-start space-x-3">
+                            <span className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {idx + 1}
+                            </span>
+                            <p className="text-xs text-slate-300 font-medium">{step}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Monetization Strategy */}
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                        <DollarSign className="w-4 h-4 text-emerald-400" /> Gamepasses & Monetización (Robux)
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {generatedGame.monetizationPasses?.map((item, idx) => (
+                          <div key={idx} className="bg-slate-950 border border-slate-800/80 rounded-xl p-3 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-xs text-slate-200">{item.name}</span>
+                                <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                  {item.price}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400">{item.reason}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* TikTok & Short Content Strategy */}
+                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                      <h3 className="text-xs font-bold text-pink-400 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                        <Share2 className="w-4 h-4" /> Estrategia para TikTok / YouTube Shorts
+                      </h3>
+                      <p className="text-xs text-slate-300">{generatedGame.tikTokStrategy}</p>
+                    </div>
+
+                    {/* "ME INTERESA" Action Button */}
+                    <div className="pt-2 border-t border-slate-800">
+                      <button
+                        onClick={handleGenerateFullGdd}
+                        disabled={isGeneratingGdd}
+                        className="w-full py-4 px-6 rounded-xl font-black text-sm bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 shadow-xl shadow-emerald-500/20 flex items-center justify-center space-x-2 transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                      >
+                        {isGeneratingGdd ? (
+                          <>
+                            <RefreshCw className="w-5 h-5 animate-spin" />
+                            <span>Redactando Documento de Desarrollo Técnico...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-5 h-5" />
+                            <span>¡ME INTERESA! (Generar GDD Técnico para Roblox Studio)</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Full Technical Game Design Document (Rendered upon clicking ME INTERESA) */}
+                  {fullGdd && (
+                    <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl space-y-6 animate-fade-in border-2">
+                      <div className="flex items-center space-x-3 border-b border-slate-800 pb-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                          <Code className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">Documento Técnico de Desarrollo (Roblox Studio)</h3>
+                          <p className="text-xs text-emerald-400 font-mono">Blueprint listo para programar</p>
+                        </div>
+                      </div>
+
+                      {/* Luau Architecture */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-emerald-400" /> 1. Arquitectura de Scripts (Luau)
+                        </h4>
+                        <div className="space-y-2 text-xs font-mono">
+                          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span className="text-emerald-400 font-bold block mb-1">ServerScriptService (Server):</span>
+                            <ul className="list-disc list-inside text-slate-300 space-y-1">
+                              {fullGdd.luauArchitecture?.serverScripts?.map((script, idx) => (
+                                <li key={idx}>{script}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span className="text-cyan-400 font-bold block mb-1">StarterPlayerScripts (Client):</span>
+                            <ul className="list-disc list-inside text-slate-300 space-y-1">
+                              {fullGdd.luauArchitecture?.localScripts?.map((script, idx) => (
+                                <li key={idx}>{script}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span className="text-amber-400 font-bold block mb-1">ReplicatedStorage (Modules):</span>
+                            <ul className="list-disc list-inside text-slate-300 space-y-1">
+                              {fullGdd.luauArchitecture?.moduleScripts?.map((script, idx) => (
+                                <li key={idx}>{script}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* DataStore Variables */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                          2. Esquema de Persistencia de Datos (DataStore)
+                        </h4>
+                        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-amber-300 flex flex-wrap gap-2">
+                          {fullGdd.dataStoreSchema?.map((variable, idx) => (
+                            <span key={idx} className="bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded">
+                              {variable}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Map & Building Specs */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          3. Especificaciones de Mapa y Modelado 3D
+                        </h4>
+                        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                          {fullGdd.buildingAndMap}
+                        </p>
+                      </div>
+
+                      {/* Launch Plan */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          4. Estrategia de Lanzamiento & Publicidad
+                        </h4>
+                        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                          {fullGdd.launchStrategy}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="bg-slate-900 border border-slate-800 border-dashed rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-500">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <div className="max-w-md">
+                    <h3 className="text-lg font-bold text-slate-200">Listos para crear el próximo éxito de Roblox</h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Configura el nicho y las mecánicas adictivas a la izquierda y haz clic en "Generar Concepto Viral" para obtener el blueprint estructurado.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          /* Niche Market Analysis Dashboard Tab */
+          <div className="lg:col-span-12 space-y-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-orange-400" />
+                Matriz de Tendencias de Mercado Roblox 2026
+              </h2>
+              <p className="text-xs text-slate-400 mb-6">
+                Métricas recopiladas sobre el comportamiento de retención, preferencia de compras en Robux y nichos con mayor oportunidad de tráfico.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ROBLOX_NICHES.map((niche) => (
+                  <div key={niche.id} className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-2xl">{niche.icon}</span>
+                        <h3 className="font-bold text-sm text-slate-200">{niche.name}</h3>
+                      </div>
+                      <span className="text-xs text-emerald-400 font-mono font-semibold">{niche.trend}</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                          <span>Índice de Popularidad (CCU)</span>
+                          <span className="font-bold text-slate-200">{niche.popularity}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full bg-gradient-to-r ${niche.color}`} 
+                            style={{ width: `${niche.popularity}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800/80 flex justify-between text-xs text-slate-300">
+                        <span>Retención de Usuario:</span>
+                        <span className="font-semibold">{niche.retention}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-300">
+                        <span>Potencial Monetización:</span>
+                        <span className="font-semibold">{niche.monetization}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+}
